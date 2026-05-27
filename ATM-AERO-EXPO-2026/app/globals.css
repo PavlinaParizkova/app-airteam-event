@@ -1,0 +1,239 @@
+@import "tailwindcss";
+
+@theme {
+  /* Core */
+  --color-at-red:      #d51c17;
+  --color-at-blue:     #153151;
+  --color-at-white:    #ffffff;
+  --color-at-black:    #1d1d1b;
+
+  /* Blue variants */
+  --color-at-blue-v1:  #10253e;
+  --color-at-blue-v2:  #1b3f67;
+  --color-at-blue-v3:  #23517c;
+  --color-at-blue-v4:  #507499;
+  --color-at-blue-v5:  #93b3cf;
+
+  /* Blue alternates */
+  --color-at-blue-a1:  #302f2e;
+  --color-at-blue-a2:  #2b4156;
+  --color-at-blue-a3:  #323e49;
+  --color-at-blue-a4:  #4d606f;
+  --color-at-blue-a5:  #cddce8;
+
+  /* Black variants */
+  --color-at-black-v1: #4a4a49;
+  --color-at-black-v2: #878787;
+  --color-at-black-v3: #d0d0d0;
+  --color-at-black-v4: #e3e3e3;
+
+  /* Semantic aliases */
+  --color-brand-primary:   var(--color-at-blue);
+  --color-brand-accent:    var(--color-at-red);
+  --color-text-primary:    var(--color-at-black);
+  --color-text-on-dark:    var(--color-at-white);
+  --color-surface-muted:   var(--color-at-black-v4);
+  --color-border-default:  var(--color-at-black-v3);
+
+  --font-sans: var(--font-poppins), "Poppins", system-ui, sans-serif;
+}
+
+html {
+  font-size: clamp(14px, 1.5vw, 18px);
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background-color: var(--color-at-blue-v1);
+  color: var(--color-at-white);
+  font-family: var(--font-poppins), "Poppins", system-ui, sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+}
+
+/* Hide scrollbar utility (used for nav tab strip) */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Slide transition */
+.slide-enter {
+  opacity: 0;
+  transform: translateX(32px);
+}
+.slide-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 280ms ease, transform 280ms ease;
+}
+.slide-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+.slide-exit-active {
+  opacity: 0;
+  transform: translateX(-32px);
+  transition: opacity 280ms ease, transform 280ms ease;
+}
+
+/* === BUTTONS – AIR TEAM Style Guide §5.2 === */
+
+/* Primary – červené CTA (--primary-color: #d51c17) */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-at-red);
+  border: 1px solid var(--color-at-red);
+  color: var(--color-at-white);
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 200ms, border-color 200ms, opacity 200ms;
+}
+.btn-primary:hover:not(:disabled) {
+  background: #b81814;
+  border-color: #b81814;
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Secondary – modrá brand (--secondary-color: #153151) */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-at-blue);
+  border: 1px solid var(--color-at-blue);
+  color: var(--color-at-white);
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 200ms, border-color 200ms;
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--color-at-blue-v1);
+  border-color: var(--color-at-blue-v1);
+}
+.btn-secondary:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Ghost – neaktivní nav záložky */
+.btn-nav-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-at-blue-v4);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 150ms, color 150ms, border-color 150ms;
+}
+.btn-nav-ghost:hover {
+  background: var(--color-at-blue-v2);
+  color: var(--color-at-white);
+  border-color: var(--color-at-blue-v2);
+}
+
+/* Transparent – zavírací tlačítka na tmavých překrytech */
+.btn-transparent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: var(--color-at-white);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 150ms;
+}
+.btn-transparent:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Card – interaktivní fotokarta s hover akcentem */
+.btn-card {
+  background: var(--color-at-blue-v2);
+  border: 1px solid var(--color-at-blue-v3);
+  transition: border-color 200ms, box-shadow 200ms;
+}
+.btn-card:hover {
+  border-color: var(--color-at-red);
+  box-shadow: 0 0 0 2px rgba(213, 28, 23, 0.25);
+}
+.btn-card:focus-visible {
+  outline: none;
+  border-color: var(--color-at-red);
+  box-shadow: 0 0 0 2px rgba(213, 28, 23, 0.25);
+}
+
+/* Checkbox custom style */
+.atm-checkbox {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  border: 2px solid var(--color-at-blue-v4);
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  transition: background 150ms, border-color 150ms;
+}
+.atm-checkbox:checked {
+  background: var(--color-at-red);
+  border-color: var(--color-at-red);
+}
+.atm-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 0px;
+  width: 6px;
+  height: 10px;
+  border: 2px solid var(--color-at-white);
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+/* Marketing / tapety – full-bleed šířka okna + mřížka (jedna třída, bez přepisování width) */
+.atm-mkt-gallery {
+  display: grid !important;
+  width: 100vw;
+  max-width: 100%;
+  margin-left: calc(50% - 50vw);
+  box-sizing: border-box;
+  padding-left: clamp(1rem, 4vw, 2.5rem);
+  padding-right: clamp(1rem, 4vw, 2.5rem);
+  min-width: 0;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: row;
+  align-content: start;
+}
+.atm-mkt-gallery > * {
+  min-width: 0;
+}
+@media (min-width: 768px) {
+  .atm-mkt-gallery {
+    gap: 1rem;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}

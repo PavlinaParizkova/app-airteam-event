@@ -1,0 +1,26 @@
+{
+  "name": "AIR TEAM × AERO EXPO 2026",
+  "short_name": "AERO EXPO",
+  "description": "Interní briefing AIR TEAM pro veletrh AERO EXPO 2026, Friedrichshafen, 22.–25. 4. 2026",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#10253e",
+  "theme_color": "#153151",
+  "start_url": "/",
+  "scope": "/",
+  "lang": "cs",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

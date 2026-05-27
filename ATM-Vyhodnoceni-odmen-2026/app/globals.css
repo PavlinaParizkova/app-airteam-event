@@ -1,0 +1,164 @@
+@import "tailwindcss";
+
+@theme {
+  /* === CANONICAL ATM TOKENS (dle atm-corporate.css) === */
+
+  /* Core */
+  --color-atm-red:       #d51c17;
+  --color-atm-blue:      #153151;
+  --color-atm-white:     #ffffff;
+  --color-atm-black:     #1d1d1b;
+
+  /* Blue variants */
+  --color-atm-blue-v1:   #10253e;
+  --color-atm-blue-v2:   #1b3f67;
+  --color-atm-blue-v3:   #23517c;
+  --color-atm-blue-v4:   #507499;
+  --color-atm-blue-v5:   #93b3cf;
+  --color-atm-blue-v6:   #abcfed;
+
+  /* Blue alternates */
+  --color-atm-blue-a1:   #302f2e;
+  --color-atm-blue-a2:   #2b4156;
+  --color-atm-blue-a3:   #323e49;
+  --color-atm-blue-a4:   #4d606f;
+  --color-atm-blue-a5:   #cddce8;
+  --color-atm-blue-a6:   #e9f6fe;
+
+  /* Black variants */
+  --color-atm-black-v1:  #4a4a49;
+  --color-atm-black-v2:  #878787;
+  --color-atm-black-v3:  #b2b2b2;
+  --color-atm-black-v4:  #d0d0d0;
+  --color-atm-black-v5:  #e3e3e3;
+  --color-atm-black-v6:  #ededed;
+
+  /* === SÉMANTICKÉ TOKENY — tmavý shell (dark mode) === */
+  /* Mapování dle --atm-shell-* z atm-corporate.css */
+  --color-shell-bg:      #10253e;        /* atm-shell-bg */
+  --color-shell-text:    #ffffff;        /* atm-shell-text */
+  --color-shell-muted:   rgba(255,255,255,0.95);  /* atm-shell-muted */
+  --color-shell-dim:     rgba(255,255,255,0.85);  /* podpůrné labely */
+  --color-shell-border:  rgba(255,255,255,0.08);  /* atm-shell-border */
+
+  --color-card-bg:       rgba(255,255,255,0.04);  /* atm-card-bg */
+  --color-card-border:   rgba(255,255,255,0.08);  /* atm-card-border */
+  --color-card-hover:    rgba(255,255,255,0.08);  /* hover state */
+
+  --color-sidebar-bg:    #10253e;        /* sidebar = Blue V1 */
+  --color-sidebar-active: #d51c17;       /* active link = Red */
+
+  --font-sans: var(--font-poppins), "Poppins", system-ui, sans-serif;
+}
+
+/* === RESET & BASE === */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: clamp(13px, 1.4vw, 15px);
+  scroll-behavior: smooth;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: linear-gradient(180deg, #0e2038 0%, #10253e 100%);
+  color: #ffffff;
+  font-family: var(--font-poppins), "Poppins", system-ui, sans-serif;
+  font-weight: 500;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+p { margin: 0; }
+
+a { color: inherit; text-decoration: none; }
+
+/* === TABLE SCROLL WRAPPER === */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 6px;
+}
+
+/* === ATM CARD (dle .atm-card z corporate) === */
+.atm-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 1.25rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.atm-card:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.14);
+}
+
+/* === STATUS BADGE === */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* === KPI BAR === */
+.kpi-bar-bg {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  height: 5px;
+  overflow: hidden;
+}
+.kpi-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--color-atm-red);
+  transition: width 0.4s ease;
+}
+
+/* === SIDEBAR NAVIGATION LINKS === */
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  color: rgba(255,255,255,0.95);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.sidebar-link:hover {
+  background: rgba(255,255,255,0.08);
+  color: #ffffff;
+}
+.sidebar-link.active {
+  background: var(--color-atm-red);
+  color: #ffffff;
+}
+
+/* === SCROLLBAR === */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.28); }

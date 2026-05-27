@@ -4,10 +4,13 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   DEAL_CHECKPOINTS,
+  OEM_CHECKPOINTS,
+  OEM_LEAD_BONUS,
+  OEM_TIER_BONUS,
   PAYMENT_TYPE_LABELS,
   type SalesEntry, type NesalesEntry, type PrepEntry,
   type DealCheckpointKey, type ApprovalFlags, type DealApproval, type KpiBand,
-  type PaymentType,
+  type PaymentType, type OemDeal, type OemTier, type OemCheckpointKey,
   formatCZK,
 } from "@/data/events";
 import type { EventWithVersions } from "@/app/lib/store";
@@ -16,6 +19,7 @@ import EventSubNav from "@/app/components/EventSubNav";
 import {
   patchTeamAction,
   patchApprovalsAction,
+  patchOemDealsAction,
   setPaymentTypeAction,
 } from "@/app/actions/events";
 
@@ -23,6 +27,24 @@ import {
 
 type S1CheckpointData = ApprovalFlags & { paymentType: PaymentType; dealCount: number };
 type CheckpointFlags = Record<DealCheckpointKey, S1CheckpointData>;
+
+type OemDealLocal = {
+  _id: string;
+  personName: string;
+  company: string;
+  contactType: string;
+  milestone: string;
+  stage: 1 | 2;
+  tier: OemTier | null;
+  annualValueUSD: number;
+  bonus: number;
+  checkpoint: OemCheckpointKey;
+  schvaleno: boolean;
+  finance: boolean;
+  proplaceno: boolean;
+  paymentType: PaymentType;
+  ceoApproved: boolean;
+};
 
 type S1Person = {
   _id: string;
@@ -137,6 +159,47 @@ function initS3(event: EventWithVersions): S3Person[] {
   }));
 }
 
+function initOem(event: EventWithVersions): OemDealLocal[] {
+  return (event.oemDeals ?? []).map((d) => ({
+    _id: uid(),
+    personName: d.personName,
+    company: d.company,
+    contactType: d.contactType,
+    milestone: d.milestone,
+    stage: d.stage,
+    tier: d.tier ?? null,
+    annualValueUSD: d.annualValueUSD ?? 0,
+    bonus: d.bonus,
+    checkpoint: d.checkpoint,
+    schvaleno: d.schvaleno,
+    finance: d.finance,
+    proplaceno: d.proplaceno,
+    paymentType: d.paymentType ?? "vyplata",
+    ceoApproved: d.ceoApproved ?? false,
+  }));
+}
+
+function oemLocalToData(d: OemDealLocal, index: number): OemDeal {
+  return {
+    id: `oem-${index}-${d.personName.replace(/\s+/g, "-").toLowerCase()}`,
+    personName: d.personName,
+    company: d.company,
+    contactType: d.contactType,
+    milestone: d.milestone,
+    stage: d.stage,
+    tier: d.tier ?? undefined,
+    annualValueUSD: d.annualValueUSD || undefined,
+    bonus: d.bonus,
+    checkpoint: d.checkpoint,
+    addedDate: new Date().toISOString().slice(0, 10),
+    schvaleno: d.schvaleno,
+    finance: d.finance,
+    proplaceno: d.proplaceno,
+    paymentType: d.paymentType,
+    ceoApproved: d.ceoApproved,
+  };
+}
+
 // ── Hlavní komponenta ───────────────────────────────────────────────────────────
 
 export default function OdmenyClient({
@@ -154,10 +217,12 @@ export default function OdmenyClient({
   // a my musíme zahodit lokální stav a reinicializovat.
   const [syncedTeamVersion, setSyncedTeamVersion] = useState<number>(event.versions.team);
   const [syncedApprovalsVersion, setSyncedApprovalsVersion] = useState<number>(event.versions.approvals);
+  const [syncedOemVersion, setSyncedOemVersion] = useState<number>(event.versions.oemDeals);
 
   const [s1, setS1] = useState<S1Person[]>(() => initS1(event));
   const [s2, setS2] = useState<S2Person[]>(() => initS2(event));
   const [s3, setS3] = useState<S3Person[]>(() => initS3(event));
+  const [oemDeals, setOemDeals] = useState<OemDealLocal[]>(() => initOem(event));
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error" | "conflict">("idle");
   const [errorMsg, setErrorMsg] = useState<string>("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -166,16 +231,22 @@ export default function OdmenyClient({
   // Reset state when server delivers a fresh version (jiný uživatel zapsal,
   // nebo se po vlastním uložení vrátila nová verze z revalidatePath).
   useEffect(() => {
-    if (event.versions.team !== syncedTeamVersion || event.versions.approvals !== syncedApprovalsVersion) {
+    if (
+      event.versions.team !== syncedTeamVersion ||
+      event.versions.approvals !== syncedApprovalsVersion ||
+      event.versions.oemDeals !== syncedOemVersion
+    ) {
       setS1(initS1(event));
       setS2(initS2(event));
       setS3(initS3(event));
+      setOemDeals(initOem(event));
       setSyncedTeamVersion(event.versions.team);
       setSyncedApprovalsVersion(event.versions.approvals);
+      setSyncedOemVersion(event.versions.oemDeals);
       // pokud zrovna nebylo nic rozjeté, ukaž jen kratký "Načteno" indikátor
       firstRender.current = true;
     }
-  }, [event, syncedTeamVersion, syncedApprovalsVersion]);
+  }, [event, syncedTeamVersion, syncedApprovalsVersion, syncedOemVersion]);
 
   // Self-service: každý člen týmu vidí pouze svůj vlastní záznam
   const isInSales   = !!memberName && event.salesTeam.some((p) => p.name === memberName);
@@ -276,8 +347,8 @@ export default function OdmenyClient({
     return { salesTeam, nesalesTeam, prepTeam, dealApprovals };
   }, [event]);
 
-  // Admin save — patche team i approvals slice. Při conflict zobrazí toast a refresh.
-  const save = useCallback(async (s1d: S1Person[], s2d: S2Person[], s3d: S3Person[]) => {
+  // Admin save — patche team, approvals a oemDeals slice. Při conflict zobrazí toast a refresh.
+  const save = useCallback(async (s1d: S1Person[], s2d: S2Person[], s3d: S3Person[], oemD: OemDealLocal[]) => {
     setSaveStatus("saving");
     setErrorMsg("");
     const { salesTeam, nesalesTeam, prepTeam, dealApprovals } = buildTeamPayload(s1d, s2d, s3d);
@@ -317,9 +388,25 @@ export default function OdmenyClient({
     }
     setSyncedApprovalsVersion(apprRes.version!);
 
+    // Krok 3 — OEM deals slice
+    const oemData = oemD.map((d, i) => oemLocalToData(d, i));
+    const oemRes = await patchOemDealsAction(event.id, syncedOemVersion, oemData);
+    if (!oemRes.ok) {
+      if (oemRes.reason === "conflict") {
+        setSaveStatus("conflict");
+        setErrorMsg(oemRes.message);
+        router.refresh();
+        return;
+      }
+      setSaveStatus("error");
+      setErrorMsg(oemRes.message);
+      return;
+    }
+    setSyncedOemVersion(oemRes.version!);
+
     setSaveStatus("saved");
     setTimeout(() => setSaveStatus("idle"), 2500);
-  }, [event.id, buildTeamPayload, syncedTeamVersion, syncedApprovalsVersion, router]);
+  }, [event.id, buildTeamPayload, syncedTeamVersion, syncedApprovalsVersion, syncedOemVersion, router]);
 
   // Self-service save — pouze paymentType per checkpoint pro přihlášeného obchodníka
   const savePaymentType = useCallback(async (s1d: S1Person[]) => {
@@ -355,18 +442,19 @@ export default function OdmenyClient({
     if (isSelfService) {
       debounceRef.current = setTimeout(() => savePaymentType(s1), 800);
     } else {
-      debounceRef.current = setTimeout(() => save(s1, s2, s3), 800);
+      debounceRef.current = setTimeout(() => save(s1, s2, s3, oemDeals), 800);
     }
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [s1, s2, s3, save, savePaymentType, isSelfService]);
+  }, [s1, s2, s3, oemDeals, save, savePaymentType, isSelfService]);
 
   // ── Součty ─────────────────────────────────────────────────────────────────
+  const oemTotal = oemDeals.reduce((sum, d) => sum + d.bonus, 0);
   const s1Total = s1.reduce((sum, p) => {
     const dealBonus = DEAL_CHECKPOINTS
       .filter((cp) => cp.key !== "D+7")
       .reduce((s, cp) => s + p.checkpoints[cp.key].dealCount * p.dealAmountPerDeal, 0);
     return sum + dealBonus + getKpiBonus(p.kpiPoints, event.kpiBands) + p.kpiMaxPoints * 100;
-  }, 0);
+  }, 0) + oemTotal;
   const s2Total = s2.reduce((sum, p) => {
     const fix = p.days * event.dailyRateNesales;
     return sum + fix + getKpiBonus(p.kpiPoints, event.kpiBands) + p.kpiMaxPoints * 100;
@@ -401,7 +489,7 @@ export default function OdmenyClient({
           <button
             onClick={() => {
               if (debounceRef.current) clearTimeout(debounceRef.current);
-              if (isSelfService) savePaymentType(s1); else save(s1, s2, s3);
+              if (isSelfService) savePaymentType(s1); else save(s1, s2, s3, oemDeals);
             }}
             disabled={saveStatus === "saving"}
             style={{
@@ -464,6 +552,16 @@ export default function OdmenyClient({
           <AddPersonButton onClick={() => setS1((prev) => [...prev, {
             _id: uid(), name: "", role: "", days: 0, kpiPoints: 0, kpiMaxPoints: 0, dealAmountPerDeal: 3000, checkpoints: emptyCheckpoints(), comment: "",
           }])} />
+        )}
+
+        {/* B2B / OEM deal bonus — pouze admin, pouze pokud je sales tým nebo jsou OEM dealy */}
+        {isAdmin && (
+          <OemSection
+            oemDeals={oemDeals}
+            salesNames={s1.map((p) => p.name).filter(Boolean)}
+            readOnly={!isAdmin}
+            onChange={setOemDeals}
+          />
         )}
       </GroupSection>
       )}
@@ -542,6 +640,331 @@ export default function OdmenyClient({
 
       {!isSelfService && <KpiBandsRef kpiBands={event.kpiBands} />}
     </div>
+  );
+}
+
+// ── B2B / OEM sekce ────────────────────────────────────────────────────────────
+
+const OEM_TIER_LABELS: Record<OemTier, string> = {
+  1: "Tier 1 — do 100 000 USD/rok → 5 000 Kč",
+  2: "Tier 2 — 100 001–500 000 USD/rok → 10 000 Kč",
+  3: "Tier 3 — 500 000+ USD/rok → 20 000 Kč",
+};
+
+function OemSection({ oemDeals, salesNames, readOnly, onChange }: {
+  oemDeals: OemDealLocal[];
+  salesNames: string[];
+  readOnly: boolean;
+  onChange: (deals: OemDealLocal[]) => void;
+}) {
+  const stage1 = oemDeals.filter((d) => d.stage === 1);
+  const stage2 = oemDeals.filter((d) => d.stage === 2);
+
+  function update(updated: OemDealLocal) {
+    onChange(oemDeals.map((d) => d._id === updated._id ? updated : d));
+  }
+
+  function remove(id: string) {
+    onChange(oemDeals.filter((d) => d._id !== id));
+  }
+
+  function addStage1() {
+    const newDeal: OemDealLocal = {
+      _id: uid(), personName: salesNames[0] ?? "", company: "", contactType: "",
+      milestone: "", stage: 1, tier: null, annualValueUSD: 0,
+      bonus: OEM_LEAD_BONUS, checkpoint: "D+7",
+      schvaleno: false, finance: false, proplaceno: false, paymentType: "vyplata", ceoApproved: false,
+    };
+    onChange([...oemDeals, newDeal]);
+  }
+
+  function addStage2() {
+    const newDeal: OemDealLocal = {
+      _id: uid(), personName: salesNames[0] ?? "", company: "", contactType: "",
+      milestone: "", stage: 2, tier: 1, annualValueUSD: 0,
+      bonus: OEM_TIER_BONUS[1], checkpoint: "D+7",
+      schvaleno: false, finance: false, proplaceno: false, paymentType: "vyplata", ceoApproved: false,
+    };
+    onChange([...oemDeals, newDeal]);
+  }
+
+  const sectionHead: React.CSSProperties = {
+    fontSize: "0.625rem", fontWeight: 700, textTransform: "uppercase",
+    letterSpacing: "0.1em", color: "rgba(255,215,0,0.85)",
+    marginBottom: "0.5rem", marginTop: "1.25rem",
+  };
+
+  if (oemDeals.length === 0 && readOnly) return null;
+
+  return (
+    <div style={{
+      marginTop: "1.25rem", paddingTop: "1rem",
+      borderTop: "1px solid rgba(255,215,0,0.18)",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.875rem", flexWrap: "wrap" }}>
+        <span style={{ fontSize: "0.6875rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,215,0,0.85)" }}>
+          B2B / OEM deal bonus
+        </span>
+        <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.55)" }}>
+          Paralelní kategorie k B2C — označit v aplikaci jako OEM typ
+        </span>
+        {!readOnly && (
+          <div style={{ marginLeft: "auto", display: "flex", gap: "0.5rem" }}>
+            <button type="button" onClick={addStage1} style={oemAddBtnStyle("#ffd700")}>
+              + OEM lead (Stupeň 1)
+            </button>
+            <button type="button" onClick={addStage2} style={oemAddBtnStyle("#f59e0b")}>
+              + OEM kontrakt (Stupeň 2)
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Stage 1 — OEM lead bonuses */}
+      {(stage1.length > 0 || !readOnly) && (
+        <>
+          <p style={sectionHead}>Stupeň 1 — OEM lead bonus (2 000 Kč, D+7)</p>
+          {stage1.length > 0 && (
+            <div style={{ overflowX: "auto", marginBottom: "0.75rem" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8125rem" }}>
+                <thead>
+                  <tr>
+                    <th style={thS}>Obchodník</th>
+                    <th style={thS}>Firma (OEM)</th>
+                    <th style={thS}>Typ zákazníka</th>
+                    <th style={thS}>Milník</th>
+                    <th style={{ ...thS, color: "#ffd700" }}>Bonus</th>
+                    <th style={{ ...thS, color: "#81c784" }}>Schváleno</th>
+                    <th style={{ ...thS, color: "#93b3cf" }}>Finance</th>
+                    <th style={{ ...thS, color: "#fbbf24" }}>Proplaceno</th>
+                    <th style={{ ...thS, color: "rgba(255,255,255,0.5)" }}>Výplata</th>
+                    {!readOnly && <th style={thS} />}
+                  </tr>
+                </thead>
+                <tbody>
+                  {stage1.map((d, ci) => (
+                    <tr key={d._id} style={{ background: ci % 2 === 0 ? "rgba(255,215,0,0.03)" : "transparent" }}>
+                      <td style={tdS}>
+                        <OemNameSelect value={d.personName} names={salesNames} readOnly={readOnly}
+                          onChange={(v) => update({ ...d, personName: v })} />
+                      </td>
+                      <td style={tdS}>
+                        <OemTextInput value={d.company} placeholder="Název firmy" readOnly={readOnly}
+                          onChange={(v) => update({ ...d, company: v })} />
+                      </td>
+                      <td style={tdS}>
+                        <OemTextInput value={d.contactType} placeholder="výrobce / integrátor / MRO" readOnly={readOnly}
+                          onChange={(v) => update({ ...d, contactType: v })} />
+                      </td>
+                      <td style={tdS}>
+                        <OemTextInput value={d.milestone} placeholder="NDA / procurement vstup / tech. jednání" readOnly={readOnly} width={200}
+                          onChange={(v) => update({ ...d, milestone: v })} />
+                      </td>
+                      <td style={tdS}>
+                        <span style={{ fontWeight: 700, color: "#ffd700" }}>{formatCZK(d.bonus)}</span>
+                      </td>
+                      <td style={{ ...tdS, textAlign: "center" }}>
+                        <CheckBox checked={d.schvaleno} color="#81c784" readOnly={readOnly}
+                          onChange={(v) => update({ ...d, schvaleno: v })} />
+                      </td>
+                      <td style={{ ...tdS, textAlign: "center" }}>
+                        <CheckBox checked={d.finance} color="#93b3cf" readOnly={readOnly}
+                          onChange={(v) => update({ ...d, finance: v })} />
+                      </td>
+                      <td style={{ ...tdS, textAlign: "center" }}>
+                        <CheckBox checked={d.proplaceno} color="#fbbf24" readOnly={readOnly}
+                          onChange={(v) => update({ ...d, proplaceno: v })} />
+                      </td>
+                      <td style={{ ...tdS, paddingLeft: "0.75rem" }}>
+                        <PaymentToggle value={d.paymentType} readOnly={readOnly}
+                          onChange={(v) => update({ ...d, paymentType: v })} />
+                      </td>
+                      {!readOnly && (
+                        <td style={tdS}>
+                          <DeleteButton onClick={() => remove(d._id)} />
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {stage1.length === 0 && !readOnly && (
+            <p style={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.35)", marginBottom: "0.5rem" }}>
+              Žádné OEM leads. Klikni „+ OEM lead" pro přidání.
+            </p>
+          )}
+        </>
+      )}
+
+      {/* Stage 2 — OEM contract bonuses */}
+      {(stage2.length > 0 || !readOnly) && (
+        <>
+          <p style={sectionHead}>Stupeň 2 — OEM kontrakt bonus (D+7 až D+24M, schvaluje CEO)</p>
+          {stage2.length > 0 && (
+            <div style={{ overflowX: "auto", marginBottom: "0.75rem" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8125rem" }}>
+                <thead>
+                  <tr>
+                    <th style={thS}>Obchodník</th>
+                    <th style={thS}>Firma (OEM)</th>
+                    <th style={thS}>Tier / hodnota</th>
+                    <th style={thS}>Etapa</th>
+                    <th style={{ ...thS, color: "#ffd700" }}>Bonus</th>
+                    <th style={{ ...thS, color: "rgba(255,215,0,0.7)" }}>CEO schválil</th>
+                    <th style={{ ...thS, color: "#81c784" }}>Schváleno</th>
+                    <th style={{ ...thS, color: "#93b3cf" }}>Finance</th>
+                    <th style={{ ...thS, color: "#fbbf24" }}>Proplaceno</th>
+                    <th style={{ ...thS, color: "rgba(255,255,255,0.5)" }}>Výplata</th>
+                    {!readOnly && <th style={thS} />}
+                  </tr>
+                </thead>
+                <tbody>
+                  {stage2.map((d, ci) => (
+                    <tr key={d._id} style={{ background: ci % 2 === 0 ? "rgba(255,215,0,0.03)" : "transparent" }}>
+                      <td style={tdS}>
+                        <OemNameSelect value={d.personName} names={salesNames} readOnly={readOnly}
+                          onChange={(v) => update({ ...d, personName: v })} />
+                      </td>
+                      <td style={tdS}>
+                        <OemTextInput value={d.company} placeholder="Název firmy" readOnly={readOnly}
+                          onChange={(v) => update({ ...d, company: v })} />
+                      </td>
+                      <td style={tdS}>
+                        {readOnly ? (
+                          <span style={{ color: "rgba(255,215,0,0.9)", fontSize: "0.75rem" }}>
+                            {d.tier ? OEM_TIER_LABELS[d.tier].split(" →")[0] : "—"}
+                          </span>
+                        ) : (
+                          <select
+                            value={d.tier ?? ""}
+                            onChange={(e) => {
+                              const t = Number(e.target.value) as OemTier;
+                              update({ ...d, tier: t, bonus: OEM_TIER_BONUS[t] });
+                            }}
+                            style={{
+                              background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)",
+                              borderRadius: 5, color: "#ffd700", fontSize: "0.75rem",
+                              padding: "4px 6px", fontFamily: "inherit", outline: "none", maxWidth: 220,
+                            }}
+                          >
+                            <option value="" disabled>Vyber tier</option>
+                            {([1, 2, 3] as OemTier[]).map((t) => (
+                              <option key={t} value={t}>{OEM_TIER_LABELS[t]}</option>
+                            ))}
+                          </select>
+                        )}
+                      </td>
+                      <td style={tdS}>
+                        {readOnly ? (
+                          <span style={{ color: "#93b3cf", fontWeight: 600 }}>{d.checkpoint}</span>
+                        ) : (
+                          <select
+                            value={d.checkpoint}
+                            onChange={(e) => update({ ...d, checkpoint: e.target.value as OemCheckpointKey })}
+                            style={{
+                              background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)",
+                              borderRadius: 5, color: "#93b3cf", fontSize: "0.8125rem",
+                              padding: "4px 6px", fontFamily: "inherit", outline: "none",
+                            }}
+                          >
+                            {OEM_CHECKPOINTS.map((cp) => (
+                              <option key={cp.key} value={cp.key}>{cp.key} — {cp.label}</option>
+                            ))}
+                          </select>
+                        )}
+                      </td>
+                      <td style={tdS}>
+                        <span style={{ fontWeight: 700, color: "#ffd700" }}>{formatCZK(d.bonus)}</span>
+                      </td>
+                      <td style={{ ...tdS, textAlign: "center" }}>
+                        <CheckBox checked={d.ceoApproved} color="rgba(255,215,0,0.8)" readOnly={readOnly}
+                          onChange={(v) => update({ ...d, ceoApproved: v })} />
+                      </td>
+                      <td style={{ ...tdS, textAlign: "center" }}>
+                        <CheckBox checked={d.schvaleno} color="#81c784" readOnly={readOnly}
+                          onChange={(v) => update({ ...d, schvaleno: v })} />
+                      </td>
+                      <td style={{ ...tdS, textAlign: "center" }}>
+                        <CheckBox checked={d.finance} color="#93b3cf" readOnly={readOnly}
+                          onChange={(v) => update({ ...d, finance: v })} />
+                      </td>
+                      <td style={{ ...tdS, textAlign: "center" }}>
+                        <CheckBox checked={d.proplaceno} color="#fbbf24" readOnly={readOnly}
+                          onChange={(v) => update({ ...d, proplaceno: v })} />
+                      </td>
+                      <td style={{ ...tdS, paddingLeft: "0.75rem" }}>
+                        <PaymentToggle value={d.paymentType} readOnly={readOnly}
+                          onChange={(v) => update({ ...d, paymentType: v })} />
+                      </td>
+                      {!readOnly && (
+                        <td style={tdS}>
+                          <DeleteButton onClick={() => remove(d._id)} />
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {stage2.length === 0 && !readOnly && (
+            <p style={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.35)", marginBottom: "0.5rem" }}>
+              Žádné OEM kontrakty. Klikni „+ OEM kontrakt" pro přidání.
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function oemAddBtnStyle(color: string): React.CSSProperties {
+  return {
+    padding: "4px 10px", borderRadius: 5, fontSize: "0.75rem", fontWeight: 600,
+    border: `1px solid ${color}55`, background: `${color}11`,
+    color, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s",
+  };
+}
+
+function OemNameSelect({ value, names, readOnly, onChange }: {
+  value: string; names: string[]; readOnly: boolean; onChange: (v: string) => void;
+}) {
+  if (readOnly) return <span style={{ fontSize: "0.875rem", fontWeight: 700, color: "#fff" }}>{value || "—"}</span>;
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      style={{
+        background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)",
+        borderRadius: 5, color: "#fff", fontSize: "0.8125rem",
+        padding: "4px 6px", fontFamily: "inherit", outline: "none", minWidth: 120,
+      }}
+    >
+      <option value="">Vyber osobu</option>
+      {names.map((n) => <option key={n} value={n}>{n}</option>)}
+    </select>
+  );
+}
+
+function OemTextInput({ value, placeholder, readOnly, width, onChange }: {
+  value: string; placeholder: string; readOnly: boolean; width?: number; onChange: (v: string) => void;
+}) {
+  if (readOnly) return <span style={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.92)" }}>{value || "—"}</span>;
+  return (
+    <input
+      type="text"
+      value={value}
+      placeholder={placeholder}
+      onChange={(e) => onChange(e.target.value)}
+      style={{
+        width: width ?? 130, background: "rgba(255,255,255,0.07)",
+        border: "1px solid rgba(255,255,255,0.15)", borderRadius: 5,
+        color: "#ffffff", fontSize: "0.8125rem", padding: "4px 8px",
+        fontFamily: "inherit", outline: "none",
+      }}
+    />
   );
 }
 

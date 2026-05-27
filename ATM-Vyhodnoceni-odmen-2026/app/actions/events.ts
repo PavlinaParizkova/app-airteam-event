@@ -26,6 +26,7 @@ import {
   type EventWithVersions,
   type KpiTrackingSlice,
   type MetaSlice,
+  type OemDealsSlice,
   type ResultsSlice,
   type SliceName,
   type TeamSlice,
@@ -42,6 +43,7 @@ import {
   type DealEntry,
   type EventResult,
   type NesalesEntry,
+  type OemDeal,
   type PaymentType,
   type PrepEntry,
   type PrepPersonTracking,
@@ -1069,6 +1071,44 @@ export async function patchPrepKpiAction(
     currentVersion: -1,
     message: "5× konflikt — zkus znovu.",
   };
+}
+
+// ── OEM Deals patch (admin only) ──────────────────────────────────────────────
+
+export async function patchOemDealsAction(
+  id: string,
+  expectedVersion: number,
+  oemDeals: OemDeal[],
+): Promise<ActionResult<{ version: number }>> {
+  const auth = await requireAuth();
+  if (!auth.ok) return forbidden(auth.message);
+  if (!auth.session.user.isAdmin)
+    return forbidden("Edit OEM dealů může jen admin.");
+
+  const cur = await readSlice<OemDealsSlice>(id, "oemdeals");
+  if (cur && (cur.version ?? 0) !== expectedVersion) {
+    return conflict(cur.version ?? 0);
+  }
+
+  const result = await casWriteSlice<OemDealsSlice>(
+    id,
+    "oemdeals",
+    expectedVersion,
+    { oemDeals },
+  );
+  if (result.status !== "ok") return casToResult(result);
+
+  await recordAudit(
+    id,
+    auth.who,
+    "update-approvals",
+    `Bulk update oemDeals (${oemDeals.length} entries)`,
+    cur,
+    { oemDeals, version: result.version },
+  );
+
+  revalidateEvent(id);
+  return { ok: true, version: result.version, data: { version: result.version } };
 }
 
 // ── Re-export helperů pro UI ────────────────────────────────────────────────

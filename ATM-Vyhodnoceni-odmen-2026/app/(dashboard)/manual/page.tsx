@@ -60,7 +60,8 @@ export default function ManualPage() {
           tagline={SALES_ROLE_TAGLINE}
           color="#507499"
           items={[
-            { icon: "🏆", text: "3 000 Kč za každý kvalifikující deal, otevřený potenciál" },
+            { icon: "🏆", text: "3 000 Kč za každý kvalifikující B2C deal, otevřený potenciál" },
+            { icon: "✈️", text: "B2B/OEM: 2 000 Kč lead bonus + až 20 000 Kč kontrakt bonus" },
             { icon: "⭐", text: "KPI bonus až 5 000 Kč" },
             { icon: "🚀", text: "KPI MAX až 5 000 Kč za výkon" },
             { icon: "🧾", text: "Nárokovaná částka za služební cestu" },
@@ -226,6 +227,105 @@ export default function ManualPage() {
         </div>
       </div>
 
+      {/* B2B / OEM DEAL BONUS */}
+      <div id="oem" />
+      <SectionLabel>B2B / OEM deal bonus — Skupina 1</SectionLabel>
+      <p style={{ fontSize: "1rem", color: "rgba(255,255,255,0.68)", lineHeight: 1.6, marginBottom: "1.5rem" }}>
+        B2B a OEM zákazníci (výrobci letadel, integrační partneři, MRO holdingy) uzavírají obchody jinak než B2C.
+        Místo jednorázové objednávky jde o rámcové smlouvy a sériové integrace s procurement cyklem 12–24 měsíců.
+        Proto platí paralelní bonusové pravidla vedle standardního deal bonusu 3 000 Kč.
+      </p>
+
+      {/* Stage 1 */}
+      <div style={{
+        background: "linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(255,215,0,0.03) 100%)",
+        border: "1px solid rgba(255,215,0,0.3)", borderRadius: 10,
+        padding: "1.5rem 1.75rem", marginBottom: "1rem",
+        display: "flex", flexWrap: "wrap", gap: "2rem", alignItems: "flex-start",
+      }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            width: 52, height: 52, borderRadius: "50%",
+            background: "rgba(255,215,0,0.15)", border: "1px solid rgba(255,215,0,0.4)",
+            flexShrink: 0,
+          }}>
+            <span style={{ fontSize: "1.375rem", lineHeight: 1 }}>🎯</span>
+          </div>
+          <div>
+            <p style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,215,0,0.8)", marginBottom: 3 }}>
+              Stupeň 1 — OEM lead bonus
+            </p>
+            <p style={{ fontSize: "2.5rem", fontWeight: 700, color: "#ffd700", lineHeight: 1 }}>2 000 Kč</p>
+            <p style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.6)", marginTop: 4 }}>vyplácí se při D+7</p>
+          </div>
+        </div>
+        <div style={{ flex: 1, minWidth: 220 }}>
+          <p style={{ fontSize: "0.9375rem", color: "rgba(255,255,255,0.85)", lineHeight: 1.6, marginBottom: "0.75rem" }}>
+            <strong style={{ color: "#ffffff" }}>Co musí proběhnout před D+7:</strong>
+          </p>
+          <ul style={{ margin: 0, paddingLeft: "1.25rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+            {[
+              "Zákazník je výrobce letadel, integrační partner nebo MRO holding.",
+              "Proběhlo první technické nebo obchodní jednání (NDA, specifikace nebo vstup do procurement procesu).",
+              "Obchodník zaregistruje kontakt jako OEM typ v aplikaci.",
+            ].map((item, i) => (
+              <li key={i} style={{ fontSize: "0.9375rem", color: "rgba(255,255,255,0.78)", lineHeight: 1.5 }}>{item}</li>
+            ))}
+          </ul>
+          <p style={{ fontSize: "0.875rem", color: "rgba(255,215,0,0.6)", marginTop: "0.75rem", lineHeight: 1.5 }}>
+            Bonus se přiznává nezávisle na výsledku obchodu — odměňuje kvalifikaci kontaktu.
+          </p>
+        </div>
+      </div>
+
+      {/* Stage 2 */}
+      <div style={{
+        background: "linear-gradient(135deg, rgba(255,215,0,0.07) 0%, rgba(255,215,0,0.02) 100%)",
+        border: "1px solid rgba(255,215,0,0.22)", borderRadius: 10,
+        padding: "1.5rem 1.75rem", marginBottom: "3.5rem",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            width: 52, height: 52, borderRadius: "50%",
+            background: "rgba(255,215,0,0.12)", border: "1px solid rgba(255,215,0,0.35)",
+            flexShrink: 0,
+          }}>
+            <span style={{ fontSize: "1.375rem", lineHeight: 1 }}>📄</span>
+          </div>
+          <div>
+            <p style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,215,0,0.75)", marginBottom: 3 }}>
+              Stupeň 2 — OEM kontrakt bonus
+            </p>
+            <p style={{ fontSize: "1rem", color: "rgba(255,255,255,0.7)", lineHeight: 1.4 }}>
+              Přiznává se při podpisu rámcové smlouvy nebo potvrzení prvního sériového odběru. Schvaluje CEO.
+              Časové okno <strong style={{ color: "#ffd700" }}>D+7 až D+24M</strong>.
+            </p>
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: "0.75rem" }}>
+          {[
+            { tier: "Tier 1", range: "do 100 000 USD/rok", bonus: "5 000 Kč" },
+            { tier: "Tier 2", range: "100 001–500 000 USD/rok", bonus: "10 000 Kč" },
+            { tier: "Tier 3", range: "500 000+ USD/rok", bonus: "20 000 Kč" },
+          ].map((t) => (
+            <div key={t.tier} style={{
+              background: "rgba(255,215,0,0.08)", border: "1px solid rgba(255,215,0,0.2)",
+              borderRadius: 8, padding: "0.875rem 1rem", textAlign: "center",
+            }}>
+              <p style={{ fontSize: "0.6875rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,215,0,0.7)", marginBottom: 4 }}>{t.tier}</p>
+              <p style={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)", marginBottom: 6, lineHeight: 1.3 }}>{t.range}</p>
+              <p style={{ fontSize: "1.375rem", fontWeight: 700, color: "#ffd700", lineHeight: 1 }}>{t.bonus}</p>
+            </div>
+          ))}
+        </div>
+        <p style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.45)", marginTop: "1rem", lineHeight: 1.5 }}>
+          Etapy D+18M a D+24M jsou dostupné pouze pro dealy označené jako OEM typ.
+          Obchodník nahlásí Marketing Managerovi — bez hlášení bonus nelze přiznat.
+        </p>
+      </div>
+
       {/* PŘÍKLADY */}
       <div id="priklady" />
       <SectionLabel>Příklady z praxe</SectionLabel>
@@ -271,6 +371,17 @@ export default function ManualPage() {
             { label: "KPI 80 b.", value: "4 000 Kč" },
           ]}
           total="4 000 Kč + 💰"
+        />
+        <ExampleCard
+          title="Obchodník — OEM zákazník"
+          emoji="✈️"
+          lines={[
+            { label: "OEM lead bonus", value: "2 000 Kč" },
+            { label: "OEM kontrakt Tier 2 (D+6M)", value: "10 000 Kč" },
+            { label: "KPI 95 b.", value: "4 000 Kč" },
+          ]}
+          total="16 000 Kč"
+          oem
         />
       </div>
 
@@ -412,6 +523,7 @@ const SUB_NAV_ITEMS = [
   { id: "role",    label: "Role" },
   { id: "kpi",     label: "KPI bonus" },
   { id: "deal",    label: "Deal bonus" },
+  { id: "oem",     label: "B2B / OEM" },
   { id: "priklady",label: "Příklady" },
   { id: "pokyny",  label: "Pokyny" },
 ];
@@ -689,22 +801,25 @@ function RoleCard({ badge, title, tagline, color, items, highlight }: {
   );
 }
 
-function ExampleCard({ title, emoji, lines, total, highlight }: {
+function ExampleCard({ title, emoji, lines, total, highlight, oem }: {
   title: string; emoji: string;
   lines: { label: string; value: string }[];
-  total: string; highlight?: boolean;
+  total: string; highlight?: boolean; oem?: boolean;
 }) {
+  const bg = oem
+    ? "linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(255,215,0,0.03) 100%)"
+    : highlight
+      ? "linear-gradient(135deg, rgba(147,179,207,0.18) 0%, rgba(80,116,153,0.08) 100%)"
+      : "rgba(255,255,255,0.04)";
+  const bdr = oem
+    ? "1px solid rgba(255,215,0,0.3)"
+    : highlight ? "1px solid rgba(147,179,207,0.4)" : "1px solid rgba(255,255,255,0.09)";
+  const totalColor = oem ? "#ffd700" : highlight ? "#93b3cf" : "#ffffff";
   return (
-    <div style={{
-      background: highlight
-        ? "linear-gradient(135deg, rgba(147,179,207,0.18) 0%, rgba(80,116,153,0.08) 100%)"
-        : "rgba(255,255,255,0.04)",
-      border: highlight ? "1px solid rgba(147,179,207,0.4)" : "1px solid rgba(255,255,255,0.09)",
-      borderRadius: 8, padding: "1.125rem",
-    }}>
+    <div style={{ background: bg, border: bdr, borderRadius: 8, padding: "1.125rem" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: "0.875rem" }}>
         <span style={{ fontSize: "1.75rem", flexShrink: 0 }}>{emoji}</span>
-        <p style={{ fontSize: "0.9375rem", fontWeight: 600, color: highlight ? "#ffffff" : "rgba(255,255,255,0.75)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <p style={{ fontSize: "0.9375rem", fontWeight: 600, color: "#ffffff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {title}
         </p>
       </div>
@@ -712,15 +827,13 @@ function ExampleCard({ title, emoji, lines, total, highlight }: {
         {lines.map((l) => (
           <div key={l.label} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9375rem" }}>
             <span style={{ color: "rgba(255,255,255,0.92)" }}>{l.label}</span>
-            <span style={{ color: "#ffffff", fontWeight: 600 }}>{l.value}</span>
+            <span style={{ color: oem ? "#ffd700" : "#ffffff", fontWeight: 600 }}>{l.value}</span>
           </div>
         ))}
       </div>
-      <div style={{
-        borderTop: "1px solid rgba(255,255,255,0.09)", paddingTop: "0.75rem",
-      }}>
+      <div style={{ borderTop: `1px solid ${oem ? "rgba(255,215,0,0.15)" : "rgba(255,255,255,0.09)"}`, paddingTop: "0.75rem" }}>
         <span style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.95)", display: "block", marginBottom: 2 }}>Odměna celkem</span>
-        <span style={{ fontSize: highlight ? "1.25rem" : "1.125rem", fontWeight: 700, color: highlight ? "#93b3cf" : "#ffffff" }}>
+        <span style={{ fontSize: highlight || oem ? "1.25rem" : "1.125rem", fontWeight: 700, color: totalColor }}>
           {total}
         </span>
       </div>

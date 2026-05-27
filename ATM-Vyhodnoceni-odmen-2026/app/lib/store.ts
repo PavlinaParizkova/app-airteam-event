@@ -37,6 +37,7 @@ import {
   type KpiBand,
   type PrepBandDef,
   type Approver,
+  type OemDeal,
 } from "@/data/events";
 
 // ── Slice typy ───────────────────────────────────────────────────────────────
@@ -103,6 +104,11 @@ export type KpiTrackingSlice = {
   version: number;
 };
 
+export type OemDealsSlice = {
+  oemDeals: OemDeal[];
+  version: number;
+};
+
 export type EventVersions = {
   meta: number;
   team: number;
@@ -111,6 +117,7 @@ export type EventVersions = {
   results: number;
   dealLog: number;
   kpiTracking: number;
+  oemDeals: number;
 };
 
 export type EventWithVersions = EventData & { versions: EventVersions };
@@ -122,7 +129,8 @@ export type SliceName =
   | "checklist"
   | "results"
   | "deallog"
-  | "kpitracking";
+  | "kpitracking"
+  | "oemdeals";
 
 // ── CAS výsledek ─────────────────────────────────────────────────────────────
 
@@ -386,7 +394,7 @@ export async function removeEventId(id: string): Promise<void> {
 // ── Načtení celého eventu z jednotlivých slice ───────────────────────────────
 
 export async function loadEvent(id: string): Promise<EventWithVersions | null> {
-  const [meta, team, approvals, checklist, results, deallog, kpiTracking] =
+  const [meta, team, approvals, checklist, results, deallog, kpiTracking, oemDealsSlice] =
     await Promise.all([
       readSlice<MetaSlice>(id, "meta"),
       readSlice<TeamSlice>(id, "team"),
@@ -395,6 +403,7 @@ export async function loadEvent(id: string): Promise<EventWithVersions | null> {
       readSlice<ResultsSlice>(id, "results"),
       readSlice<DealLogSlice>(id, "deallog"),
       readSlice<KpiTrackingSlice>(id, "kpitracking"),
+      readSlice<OemDealsSlice>(id, "oemdeals"),
     ]);
 
   if (!meta) return null;
@@ -434,6 +443,7 @@ export async function loadEvent(id: string): Promise<EventWithVersions | null> {
     dealLog: deallog?.dealLog ?? [],
     salesKpiTracking: kpiTracking?.salesKpiTracking ?? [],
     prepKpiTracking: kpiTracking?.prepKpiTracking ?? [],
+    oemDeals: oemDealsSlice?.oemDeals ?? [],
     versions: {
       meta: meta.version ?? 0,
       team: team?.version ?? 0,
@@ -442,6 +452,7 @@ export async function loadEvent(id: string): Promise<EventWithVersions | null> {
       results: results?.version ?? 0,
       dealLog: deallog?.version ?? 0,
       kpiTracking: kpiTracking?.version ?? 0,
+      oemDeals: oemDealsSlice?.version ?? 0,
     },
   };
 
@@ -513,6 +524,9 @@ export async function createEventSlices(
     salesKpiTracking: data.salesKpiTracking ?? [],
     prepKpiTracking: data.prepKpiTracking ?? [],
   };
+  const oemDeals: Omit<OemDealsSlice, "version"> = {
+    oemDeals: data.oemDeals ?? [],
+  };
 
   await Promise.all([
     casWriteSlice<MetaSlice>(data.id, "meta", 0, meta),
@@ -522,6 +536,7 @@ export async function createEventSlices(
     casWriteSlice<ResultsSlice>(data.id, "results", 0, results),
     casWriteSlice<DealLogSlice>(data.id, "deallog", 0, deallog),
     casWriteSlice<KpiTrackingSlice>(data.id, "kpitracking", 0, kpiTracking),
+    casWriteSlice<OemDealsSlice>(data.id, "oemdeals", 0, oemDeals),
   ]);
 
   await addEventId(data.id);
@@ -539,6 +554,7 @@ export async function deleteEventSlices(id: string): Promise<void> {
     "results",
     "deallog",
     "kpitracking",
+    "oemdeals",
   ];
   if (!isKvConfigured()) {
     const store = devRead();

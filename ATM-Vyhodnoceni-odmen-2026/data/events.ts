@@ -167,6 +167,53 @@ export const DEAL_CHECKPOINTS = [
 
 export type DealCheckpointKey = (typeof DEAL_CHECKPOINTS)[number]["key"];
 
+// ── B2B / OEM deal bonus ────────────────────────────────────────────────────
+
+export const OEM_CHECKPOINTS = [
+  { key: "D+7",   label: "D+7 dní" },
+  { key: "D+3M",  label: "D+3 měsíce" },
+  { key: "D+6M",  label: "D+6 měsíců" },
+  { key: "D+9M",  label: "D+9 měsíců" },
+  { key: "D+12M", label: "D+12 měsíců" },
+  { key: "D+18M", label: "D+18 měsíců" },
+  { key: "D+24M", label: "D+24 měsíců" },
+] as const;
+
+export type OemCheckpointKey = (typeof OEM_CHECKPOINTS)[number]["key"];
+
+export type OemStage = 1 | 2;
+export type OemTier = 1 | 2 | 3;
+
+/** Stage 1: fixed OEM lead qualification bonus. */
+export const OEM_LEAD_BONUS = 2000;
+
+/** Stage 2: contract bonus per tier (annual contract value). */
+export const OEM_TIER_BONUS: Record<OemTier, number> = {
+  1: 5000,    // do 100 000 USD/rok
+  2: 10000,   // 100 001–500 000 USD/rok
+  3: 20000,   // 500 000+ USD/rok
+};
+
+export type OemDeal = {
+  id: string;
+  personName: string;
+  company: string;           // název OEM zákazníka
+  contactType: string;       // "výrobce letadel" | "integrační partner" | "MRO holding" | jiný
+  milestone: string;         // popis milníku (NDA, procurement vstup, tech. jednání)
+  stage: OemStage;
+  tier?: OemTier;            // pouze pro stage 2
+  annualValueUSD?: number;   // pouze pro stage 2
+  bonus: number;             // 2 000 pro stage 1; OEM_TIER_BONUS[tier] pro stage 2
+  checkpoint: OemCheckpointKey;
+  addedDate: string;
+  schvaleno: boolean;
+  finance: boolean;
+  proplaceno: boolean;
+  paymentType?: PaymentType;
+  ceoApproved?: boolean;     // stage 2 vyžaduje CEO schválení
+  ceoApprovedDate?: string;
+};
+
 export type DealApproval = {
   personName: string;
   checkpoint: DealCheckpointKey;
@@ -239,6 +286,9 @@ export type EventData = {
 
   // ── Odmeny editor — per-person deal approvals ─────────────────────────────
   dealApprovals?: DealApproval[];
+
+  // ── B2B / OEM deal bonus (Stage 1 leads + Stage 2 contracts) ──────────────
+  oemDeals?: OemDeal[];
 };
 
 export const EVENTS: EventData[] = [

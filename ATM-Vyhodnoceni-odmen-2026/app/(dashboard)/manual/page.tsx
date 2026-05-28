@@ -41,7 +41,7 @@ export default function ManualPage() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem", marginBottom: "3.5rem" }}>
         <BigStat label="KPI bonus (max 100 b.)" value="5 000 Kč" sub="5 pásem po 1 000 Kč" forAll />
         <BigStat label="KPI MAX (0–50 b.)" value="až 5 000 Kč" sub="každý bod navíc = 100 Kč" forAll gold />
-        <BigStat label="Deal bonus" value="3 000 Kč" sub="za každý deal, otevřený potenciál" deal badgeLabel="Skupina 1" />
+        <BigStat label="Deal bonus" value="až 3 000 Kč" sub="B2C deal · OEM viz sekce níže" deal badgeLabel="Skupina 1" />
         <BigStat label="Fix skupiny 2" value="2 000 Kč" sub="za každý den účasti na eventu" fix badgeLabel="Skupina 2" />
       </div>
 
@@ -197,9 +197,9 @@ export default function ManualPage() {
               <span style={{ fontSize: "1.5rem", lineHeight: 1 }}>🏆</span>
             </div>
             <div>
-              <p style={{ fontSize: "0.9375rem", color: "rgba(255,255,255,0.92)", marginBottom: 6 }}>za každý deal</p>
+              <p style={{ fontSize: "0.9375rem", color: "rgba(255,255,255,0.92)", marginBottom: 6 }}>za každý B2C deal</p>
               <p style={{ fontSize: "3.5rem", fontWeight: 700, color: "#fb923c", lineHeight: 1 }}>3 000 Kč</p>
-              <p style={{ fontSize: "0.9375rem", color: "rgba(255,255,255,0.95)", marginTop: 6 }}>otevřený potenciál · čím víc, tím líp</p>
+              <p style={{ fontSize: "0.9375rem", color: "rgba(255,255,255,0.95)", marginTop: 6 }}>otevřený potenciál · B2B / OEM viz sekce níže</p>
             </div>
           </div>
           <div style={{ flex: 1, minWidth: 240 }}>

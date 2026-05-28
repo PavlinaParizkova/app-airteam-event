@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getAuth } from "@/app/lib/getAuth";
 import { listAccessLogs, type AccessLogEntry } from "@/app/lib/access-log";
+import AdminTools from "./AdminTools";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Přístupy do aplikace | AIR TEAM" };
@@ -60,6 +61,8 @@ export default async function AdminPristupyPage() {
       <p style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.95)", marginBottom: "1.75rem", lineHeight: 1.5 }}>
         Záznam každé navštívené stránky po přihlášení. Stránka není v menu pro ostatní uživatele.
       </p>
+
+      <AdminTools />
 
       <section style={{ marginBottom: "2rem" }}>
         <h2 style={{ fontSize: "0.8125rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.5)", marginBottom: "0.75rem" }}>
